@@ -1,0 +1,6 @@
+
+//generate .p12 file
+openssl pkcs12 -export -in prv7api.arcot.com.cer.pem -inkey prv7api.arcot.com.key.pem -certfile prv7api.arcot.com.cer.pem -out prv7_keyAndCertBundle.p12
+
+//generate .jks out of .p12 file
+keytool -importkeystore -srckeystore prv7_keyAndCertBundle.p12 -srcstoretype PKCS12 -destkeystore C:\Users\rg030672\Documents\PaySec-2-KT\CallBackServices\certs\certs\prv7_keyAndCertBundle.jks
