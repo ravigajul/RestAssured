@@ -1,4 +1,4 @@
-# RestAssured
+# JKS for SSL certs for two way SSL configured APIs
 
 Below notes for situation where API require certificates for two way SSL connections.
 //generate .p12 file
