@@ -31,7 +31,6 @@ public class GetData {
 		httpRequest.header("Accept", "applicationjson");
 		httpRequest.body(new File(filePath + File.separator+ "src"+ File.separator+"main"+File.separator+"java"+File.separator+"com"+File.separator+"restassured"+File.separator+"data.json"));
 		//httpRequest.body(jsondata);
-
 		// Response after post method Response response =
 		Response response = httpRequest.post("/api/users");
 		System.out.println(response.getStatusCode() + "-->" + response.getBody().asString());
