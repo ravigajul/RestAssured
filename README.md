@@ -480,6 +480,171 @@ public class ReadJsonData {
 
 ---
 
+### **📌 Understanding Hamcrest Matchers in Rest Assured**
+Hamcrest is a **framework for writing flexible and readable assertions**, often used in **Rest Assured** for API testing. It provides a rich set of matchers to validate **API responses** effectively.
+
+---
+## **🔹 Why Use Hamcrest Matchers in Rest Assured?**
+✅ **Readable & Expressive Assertions** – Code looks more natural and easy to understand.  
+✅ **Powerful Validation** – Supports **logical conditions, collections, text, numeric checks, and JSON parsing.**  
+✅ **Reduces Boilerplate Code** – No need for manual assertions like `if-else`.  
+
+---
+## **🔹 Basic Hamcrest Matchers**
+| Matcher | Purpose | Example |
+|---------|---------|---------|
+| `equalTo(x)` | Exact match | `body("id", equalTo(10))` |
+| `not(x)` | Negation | `body("status", not("error"))` |
+| `containsString(x)` | String contains | `body("message", containsString("success"))` |
+| `startsWith(x)` | String starts with | `body("email", startsWith("test"))` |
+| `endsWith(x)` | String ends with | `body("url", endsWith(".com"))` |
+| `hasItem(x)` | Collection contains one element | `body("names", hasItem("John"))` |
+| `hasItems(x, y, z)` | Collection contains multiple elements | `body("names", hasItems("John", "Doe"))` |
+| `everyItem(x)` | Condition on every item | `body("ages", everyItem(greaterThan(18)))` |
+| `greaterThan(x)` | Number is greater than | `body("age", greaterThan(18))` |
+| `lessThan(x)` | Number is less than | `body("score", lessThan(100))` |
+| `greaterThanOrEqualTo(x)` | Number is greater than or equal | `body("score", greaterThanOrEqualTo(50))` |
+| `lessThanOrEqualTo(x)` | Number is less than or equal | `body("score", lessThanOrEqualTo(90))` |
+| `notNullValue()` | Check if value is not null | `body("id", notNullValue())` |
+| `nullValue()` | Check if value is null | `body("deletedAt", nullValue())` |
+
+---
+## **🔹 Examples of Hamcrest Matchers in Rest Assured**
+
+### **✅ 1. Basic Assertions**
+#### **Validate that the response contains an exact value**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .statusCode(200)
+        .body("id", equalTo(1))
+        .body("userId", equalTo(1))
+        .body("title", notNullValue());
+```
+
+---
+### **✅ 2. String Validations**
+#### **Check if a string contains a specific word**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .body("title", containsString("sunt aut facere"));
+```
+
+#### **Check if a string starts or ends with a specific value**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .body("title", startsWith("sunt"))
+        .body("title", endsWith("magnam"));
+```
+
+---
+### **✅ 3. Collection Validations**
+#### **Verify that a response contains an item in an array**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users")
+    .then()
+        .body("username", hasItem("Bret"));
+```
+
+#### **Verify multiple values exist in an array**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users")
+    .then()
+        .body("username", hasItems("Bret", "Antonette", "Samantha"));
+```
+
+#### **Validate every item in a list satisfies a condition**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users")
+    .then()
+        .body("id", everyItem(greaterThan(0)));
+```
+
+---
+### **✅ 4. Numeric Validations**
+#### **Check if a number is greater or less than a value**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .body("id", greaterThan(0))
+        .body("id", lessThan(100));
+```
+
+#### **Validate if a value is within a range**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .body("id", greaterThanOrEqualTo(1))
+        .body("id", lessThanOrEqualTo(100));
+```
+
+---
+### **✅ 5. Logical Matchers**
+#### **Combine multiple conditions using `not()`**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .body("id", not(equalTo(0)))
+        .body("title", not(containsString("error")));
+```
+
+---
+### **✅ 6. Validate JSON Array Size**
+#### **Check if the response has exactly 10 items**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users")
+    .then()
+        .body("size()", equalTo(10));
+```
+
+---
+### **✅ 7. Validate JSON Schema Using Hamcrest**
+```java
+import static io.restassured.module.jsv.JsonSchemaValidator.*;
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .body(matchesJsonSchemaInClasspath("post-schema.json"));
+```
+
+---
+## **🔥 Summary**
+| Matcher | Use Case | Example |
+|---------|---------|---------|
+| `equalTo(x)` | Exact match | `"id", equalTo(1)` |
+| `not(x)` | Negation | `"status", not("error")` |
+| `containsString(x)` | String contains | `"message", containsString("success")` |
+| `hasItem(x)` | List contains | `"names", hasItem("John")` |
+| `everyItem(x)` | Every item matches | `"ages", everyItem(greaterThan(18))` |
+| `greaterThan(x)` | Numeric validation | `"age", greaterThan(18)` |
+| `notNullValue()` | Check not null | `"id", notNullValue()` |
+
+---
+
+
 # JKS for SSL certs for two way SSL configured APIs
 
 Below notes for situation where API require certificates for two way SSL connections.
