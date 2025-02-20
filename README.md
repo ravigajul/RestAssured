@@ -838,6 +838,200 @@ given()
 | `matchesJsonSchemaInClasspath(x)` | Validate schema | `.body(matchesJsonSchemaInClasspath("schema.json"))` |
 
 ---
+# **🔥 Real-Time API Security Testing with Rest Assured 🔥**  
+
+API security is **critical** in preventing **unauthorized access, data leaks, and vulnerabilities**. Here are some **real-world API security tests** you can perform using **Rest Assured** and other tools.
+
+---
+
+## **✅ 1. Test Unauthorized Access (No Auth)**
+🔹 **Task:** Ensure that endpoints **requiring authentication** return `401 Unauthorized`.  
+
+### **✅ Solution**
+```java
+given()
+    .when()
+        .get("https://api.example.com/secure-data")
+    .then()
+        .statusCode(401); // Unauthorized
+```
+✅ **Confirms that users without authentication cannot access secure endpoints.**
+
+---
+
+## **✅ 2. Test Incorrect Auth Credentials**
+🔹 **Task:** Verify that using incorrect credentials returns `403 Forbidden`.  
+
+### **✅ Solution**
+```java
+given()
+    .auth().basic("invalidUser", "wrongPassword")
+.when()
+    .get("https://api.example.com/secure-data")
+.then()
+    .statusCode(403); // Forbidden
+```
+✅ **Ensures the API correctly rejects invalid login attempts.**
+
+---
+
+## **✅ 3. Test Rate Limiting (Too Many Requests)**
+🔹 **Task:** Ensure the API enforces a request limit (e.g., `5 requests/sec`) and returns `429 Too Many Requests`.  
+
+### **✅ Solution**
+```java
+import java.util.concurrent.*;
+
+void testRateLimit() throws InterruptedException {
+    var executor = Executors.newFixedThreadPool(10);
+
+    for (int i = 0; i < 10; i++) {
+        executor.submit(() -> {
+            given()
+            .when()
+                .get("https://api.example.com/limited-endpoint")
+            .then()
+                .statusCode(anyOf(equalTo(200), equalTo(429))); // 429 = Too Many Requests
+        });
+    }
+
+    executor.shutdown();
+    executor.awaitTermination(5, TimeUnit.SECONDS);
+}
+```
+✅ **Confirms the API handles excessive requests correctly.**
+
+---
+
+## **✅ 4. Test SQL Injection Protection**
+🔹 **Task:** Ensure that SQL Injection attacks **don’t work**.  
+
+### **✅ Solution**
+```java
+given()
+    .queryParam("username", "' OR '1'='1") // SQL Injection attempt
+.when()
+    .get("https://api.example.com/user")
+.then()
+    .statusCode(anyOf(equalTo(400), equalTo(403))); // Bad Request or Forbidden
+```
+✅ **Prevents unauthorized data access via SQL injection.**
+
+---
+
+## **✅ 5. Test Cross-Site Scripting (XSS) Protection**
+🔹 **Task:** Ensure the API **sanitizes inputs** and prevents XSS.  
+
+### **✅ Solution**
+```java
+given()
+    .queryParam("input", "<script>alert('Hacked')</script>")
+.when()
+    .post("https://api.example.com/comments")
+.then()
+    .statusCode(anyOf(equalTo(400), equalTo(403))) // Expecting rejection
+    .body(not(containsString("<script>")));
+```
+✅ **Ensures the API removes malicious scripts.**
+
+---
+
+## **✅ 6. Test Cross-Origin Resource Sharing (CORS) Policies**
+🔹 **Task:** Ensure the API blocks unauthorized **cross-origin** requests.  
+
+### **✅ Solution**
+```java
+given()
+    .header("Origin", "http://malicious-site.com")
+.when()
+    .options("https://api.example.com/data")
+.then()
+    .header("Access-Control-Allow-Origin", not("http://malicious-site.com"));
+```
+✅ **Ensures API only allows trusted domains to access it.**
+
+---
+
+## **✅ 7. Test Session Hijacking & CSRF Protection**
+🔹 **Task:** Ensure **cookies or CSRF tokens** are required.  
+
+### **✅ Solution**
+```java
+given()
+    .cookie("session_id", "fake_session")
+.when()
+    .get("https://api.example.com/user-info")
+.then()
+    .statusCode(403); // Expect rejection
+```
+✅ **Prevents attackers from hijacking a session.**
+
+---
+
+## **✅ 8. Test Sensitive Data Exposure**
+🔹 **Task:** Ensure API does **not leak sensitive data** like passwords.  
+
+### **✅ Solution**
+```java
+given()
+    .when()
+        .get("https://api.example.com/user/1")
+    .then()
+        .body("$", not(hasKey("password")))  // Ensures password is not exposed
+        .body("$", not(hasKey("creditCard")));
+```
+✅ **Prevents security risks due to data leaks.**
+
+---
+
+## **✅ 9. Test Weak API Keys & JWT Tokens**
+🔹 **Task:** Ensure invalid tokens **fail** authentication.  
+
+### **✅ Solution**
+```java
+given()
+    .header("Authorization", "Bearer weak_token_123")
+.when()
+    .get("https://api.example.com/protected")
+.then()
+    .statusCode(401); // Unauthorized
+```
+✅ **Validates token security.**
+
+---
+
+## **✅ 10. Test API with Expired Tokens**
+🔹 **Task:** Ensure expired tokens **fail** authentication.  
+
+### **✅ Solution**
+```java
+given()
+    .header("Authorization", "Bearer expired_token")
+.when()
+    .get("https://api.example.com/protected")
+.then()
+    .statusCode(401); // Unauthorized
+```
+✅ **Ensures expired tokens are rejected.**
+
+---
+
+## **🚀 Summary of API Security Tests**
+| **Test Scenario** | **Expected Outcome** |
+|-------------------|---------------------|
+| No Auth | `401 Unauthorized` |
+| Invalid Credentials | `403 Forbidden` |
+| Rate Limiting | `429 Too Many Requests` |
+| SQL Injection | `400 Bad Request` |
+| XSS Injection | HTML tags sanitized |
+| CORS Protection | Unauthorized origins blocked |
+| CSRF Protection | Invalid sessions rejected |
+| Sensitive Data Exposure | Passwords, credit card info not exposed |
+| Weak JWT Tokens | `401 Unauthorized` |
+| Expired Tokens | `401 Unauthorized` |
+
+---
+
 
 
 # JKS for SSL certs for two way SSL configured APIs
