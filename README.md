@@ -480,10 +480,6 @@ public class ReadJsonData {
 
 ---
 
-This covers **everything you need** for **data handling between API requests** in **Rest Assured**! 🚀 Let me know if you want **mock interview questions** or **framework design tips**! 🎯
-
-
-
 # JKS for SSL certs for two way SSL configured APIs
 
 Below notes for situation where API require certificates for two way SSL connections.
