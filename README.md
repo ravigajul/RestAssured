@@ -643,6 +643,201 @@ given()
 | `notNullValue()` | Check not null | `"id", notNullValue()` |
 
 ---
+## **🔥 Advanced Rest Assured Scenarios with Hamcrest Matchers**
+
+Here are some **advanced API testing scenarios** using **Hamcrest matchers** in **Rest Assured** 
+
+---
+
+## **🔥 Scenario 1: Validate Complex JSON Responses with Deep Nesting**
+**🔹 Task:** Verify the latitude and longitude in a nested JSON response for a specific user.
+
+### **✅ Solution:**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users/3")
+    .then()
+        .statusCode(200)
+        .body("address.geo.lat", equalTo("-68.6102"))
+        .body("address.geo.lng", equalTo("-47.0653"));
+```
+✅ **`geo.lat` and `geo.lng` are deeply nested elements in the response JSON.**
+
+---
+
+## **🔥 Scenario 2: Validate JSON Array Elements Using `anyOf()` and `allOf()`**
+**🔹 Task:** Verify that the response contains at least **one of** `"Bret"`, `"Antonette"`, or `"RandomUser"` as usernames.
+
+### **✅ Solution:**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users")
+    .then()
+        .body("username", anyOf(hasItem("Bret"), hasItem("Antonette"), hasItem("RandomUser")));
+```
+✅ **`anyOf()` ensures that at least one condition is met.**  
+✅ **Use `allOf()` if you need to check for multiple conditions together.**
+
+---
+
+## **🔥 Scenario 3: Extract JSON Response and Perform Advanced Validations**
+**🔹 Task:** Extract a user's **email** from the API response and validate its format.
+
+### **✅ Solution:**
+```java
+import java.util.regex.Pattern;
+
+Response response = given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users")
+    .then()
+        .statusCode(200)
+        .extract()
+        .response();
+
+String email = response.jsonPath().getString("[0].email");
+
+// Validate email format using regex
+assertThat(email, matchesPattern("^[A-Za-z0-9+_.-]+@(.+)$"));
+```
+✅ **Extracts email dynamically and validates using regex with `matchesPattern()`**
+
+---
+
+## **🔥 Scenario 4: Validate Response Using Logical Matchers**
+**🔹 Task:** Verify that the user **ID** is between `1` and `10`.
+
+### **✅ Solution:**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users/1")
+    .then()
+        .body("id", allOf(greaterThanOrEqualTo(1), lessThanOrEqualTo(10)));
+```
+✅ **Ensures `id` is within the range `[1,10]`.**
+
+---
+
+## **🔥 Scenario 5: Validate API Responses with Custom Timeout**
+**🔹 Task:** Ensure that the response **time is less than 1 second**.
+
+### **✅ Solution:**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts")
+    .then()
+        .time(lessThan(1000L)); // Time in milliseconds
+```
+✅ **Crucial for performance testing in API validation.**
+
+---
+
+## **🔥 Scenario 6: Extract and Pass Data Between API Calls**
+**🔹 Task:** Fetch the **ID of the first user** and use it to get **that user’s posts**.
+
+### **✅ Solution:**
+```java
+int userId = given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users")
+    .then()
+        .extract()
+        .path("[0].id");
+
+given()
+    .queryParam("userId", userId)
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts")
+    .then()
+        .body("userId", everyItem(equalTo(userId)));
+```
+✅ **Dynamic API chaining for real-world scenarios.**
+
+---
+
+## **🔥 Scenario 7: Validate API Response When a Key is Missing**
+**🔹 Task:** Verify that the `deletedAt` field is **not present** in the response.
+
+### **✅ Solution:**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/users/1")
+    .then()
+        .body("$", not(hasKey("deletedAt")));
+```
+✅ **Ensures that `"deletedAt"` is missing in the JSON response.**
+
+---
+
+## **🔥 Scenario 8: Validate API with Multi-Query Parameters**
+**🔹 Task:** Fetch **posts for user ID `1` and filter for titles containing "qui"**.
+
+### **✅ Solution:**
+```java
+given()
+    .queryParam("userId", 1)
+    .queryParam("title_like", "qui") // Filters posts containing "qui" in the title
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts")
+    .then()
+        .statusCode(200)
+        .body("userId", everyItem(equalTo(1)))
+        .body("title", everyItem(containsString("qui")));
+```
+✅ **Real-world filtering of API responses using query parameters.**
+
+---
+
+## **🔥 Scenario 9: Validate Response Headers**
+**🔹 Task:** Ensure the response has `Content-Type` as `application/json`.
+
+### **✅ Solution:**
+```java
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .header("Content-Type", equalTo("application/json; charset=utf-8"));
+```
+✅ **Validates that the response header matches expectations.**
+
+---
+
+## **🔥 Scenario 10: Validate Response Against Predefined JSON Schema**
+**🔹 Task:** Ensure the response matches the expected **JSON schema**.
+
+### **✅ Solution:**
+```java
+import static io.restassured.module.jsv.JsonSchemaValidator.*;
+
+given()
+    .when()
+        .get("https://jsonplaceholder.typicode.com/posts/1")
+    .then()
+        .body(matchesJsonSchemaInClasspath("post-schema.json"));
+```
+✅ **Ensures API consistency by validating against a predefined schema.**  
+✅ **JSON schema files are placed in the `resources` folder.**
+
+---
+
+## **🚀 Summary of Advanced Hamcrest Matchers in Rest Assured**
+| Matcher | Purpose | Example |
+|---------|---------|---------|
+| `hasKey(x)` | Validate key exists | `body("$", hasKey("email"))` |
+| `not(hasKey(x))` | Validate key is missing | `body("$", not(hasKey("deletedAt")))` |
+| `anyOf(x, y, z)` | Any condition should pass | `body("username", anyOf(hasItem("Bret"), hasItem("Samantha")))` |
+| `allOf(x, y, z)` | All conditions should pass | `body("id", allOf(greaterThan(0), lessThan(100)))` |
+| `matchesPattern(x)` | Validate regex | `assertThat(email, matchesPattern("^[A-Za-z0-9+_.-]+@(.+)$"));` |
+| `time(lessThan(x))` | Validate response time | `.time(lessThan(1000L))` |
+| `matchesJsonSchemaInClasspath(x)` | Validate schema | `.body(matchesJsonSchemaInClasspath("schema.json"))` |
+
+---
 
 
 # JKS for SSL certs for two way SSL configured APIs
