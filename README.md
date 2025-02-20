@@ -260,7 +260,227 @@ public class TestNGExample {
 - Maintain a **config.properties** file for URLs & tokens.  
 - Use **Rest Assured with Cucumber (BDD approach).**  
 
+ **Data handling between requests** is an important topic in **Rest Assured** testing, especially for real-world scenarios where API calls depend on each other.
 
+---
+
+# **📌 Data Handling Between Requests in Rest Assured**
+When testing APIs, you often need to:
+- **Extract data from one request** and use it in another request.  
+- Handle **dynamic response values** such as IDs, tokens, etc.  
+- Use **global variables or test context** for data persistence.  
+
+---
+
+## **🔹 1. Extracting and Passing Data Between Requests**
+### **✅ Extracting a Value from Response & Using It in Another Request**
+Example: Create a new user, extract the `userId`, and fetch details using that ID.
+
+```java
+import static io.restassured.RestAssured.*;
+import io.restassured.response.Response;
+
+public class DataPassingExample {
+    public static void main(String[] args) {
+        // Step 1: Create a user (POST request)
+        String requestBody = "{ \"name\": \"John\", \"job\": \"Engineer\" }";
+
+        Response response = given()
+            .header("Content-Type", "application/json")
+            .body(requestBody)
+        .when()
+            .post("https://reqres.in/api/users")
+        .then()
+            .statusCode(201)
+            .extract()
+            .response();
+
+        // Extracting user ID from response
+        String userId = response.jsonPath().getString("id");
+        System.out.println("Extracted User ID: " + userId);
+
+        // Step 2: Use the extracted ID in the next GET request
+        given()
+            .pathParam("userId", userId)
+        .when()
+            .get("https://reqres.in/api/users/{userId}")
+        .then()
+            .statusCode(200)
+            .log().body();
+    }
+}
+```
+**Key Concept:**  
+✅ `extract().response()` – Extracts the entire response.  
+✅ `jsonPath().getString("id")` – Extracts a specific field from the response.  
+
+---
+
+## **🔹 2. Using Global Variables for Data Sharing**
+For larger frameworks, you might want to **store data globally** for later use.
+
+### **✅ Using Static Variables**
+```java
+public class TestDataStore {
+    public static String userId;  // Global storage
+}
+```
+
+📍 **Store Data in First Request**
+```java
+TestDataStore.userId = response.jsonPath().getString("id");
+```
+
+📍 **Use the Stored Data in Another Request**
+```java
+given()
+    .pathParam("userId", TestDataStore.userId)
+.when()
+    .get("https://reqres.in/api/users/{userId}")
+.then()
+    .statusCode(200);
+```
+
+✅ This approach works well in **TestNG & JUnit** where multiple test cases need shared data.
+
+---
+
+## **🔹 3. Using HashMap for Dynamic Data Storage**
+Instead of a static variable, you can use **HashMap** to store and retrieve multiple values dynamically.
+
+```java
+import java.util.HashMap;
+import static io.restassured.RestAssured.*;
+
+public class DataStorageExample {
+    static HashMap<String, String> dataStore = new HashMap<>();
+
+    public static void main(String[] args) {
+        // Step 1: Create user and store ID in HashMap
+        Response response = given()
+            .header("Content-Type", "application/json")
+            .body("{ \"name\": \"Alice\", \"job\": \"Tester\" }")
+        .when()
+            .post("https://reqres.in/api/users")
+        .then()
+            .statusCode(201)
+            .extract()
+            .response();
+
+        dataStore.put("userId", response.jsonPath().getString("id"));
+
+        // Step 2: Use stored ID in GET request
+        given()
+            .pathParam("userId", dataStore.get("userId"))
+        .when()
+            .get("https://reqres.in/api/users/{userId}")
+        .then()
+            .statusCode(200);
+    }
+}
+```
+
+✅ This approach is useful for **storing multiple dynamic values** during test execution.
+
+---
+
+## **🔹 4. Using TestNG `@BeforeMethod` and `@AfterMethod` for Data Setup**
+When writing tests in **TestNG**, you might need to **set up test data** before running tests.
+
+```java
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import static io.restassured.RestAssured.*;
+import io.restassured.response.Response;
+
+public class TestNGDataHandling {
+    String userId;
+
+    @BeforeMethod
+    public void createUser() {
+        Response response = given()
+            .header("Content-Type", "application/json")
+            .body("{ \"name\": \"Emma\", \"job\": \"Dev\" }")
+        .when()
+            .post("https://reqres.in/api/users")
+        .then()
+            .statusCode(201)
+            .extract()
+            .response();
+
+        userId = response.jsonPath().getString("id");
+    }
+
+    @Test
+    public void testFetchUser() {
+        given()
+            .pathParam("userId", userId)
+        .when()
+            .get("https://reqres.in/api/users/{userId}")
+        .then()
+            .statusCode(200);
+    }
+}
+```
+✅ **TestNG's `@BeforeMethod` ensures** that data is created before each test.
+
+---
+
+## **🔹 5. Data Handling Using External Files (JSON & Excel)**
+You might need to **store data in external JSON or Excel files** to use across multiple tests.
+
+### **✅ Reading from a JSON File (External Data Source)**
+Use `ObjectMapper` from **Jackson library** to parse JSON files.
+
+📍 **Example: Read data from a JSON file (`user.json`)**
+```json
+{
+    "name": "Mike",
+    "job": "Manager"
+}
+```
+
+📍 **Java Code to Read JSON File**
+```java
+import java.io.File;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import static io.restassured.RestAssured.*;
+
+public class ReadJsonData {
+    public static void main(String[] args) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        File file = new File("src/test/resources/user.json");
+
+        // Convert JSON file to Java Object
+        User user = objectMapper.readValue(file, User.class);
+
+        // Use data from JSON in API request
+        given()
+            .header("Content-Type", "application/json")
+            .body(user)
+        .when()
+            .post("https://reqres.in/api/users")
+        .then()
+            .statusCode(201);
+    }
+}
+```
+✅ **Using external JSON files** allows reusability and flexibility in test data handling.
+
+---
+
+# **🔥 Quick Recap: How to Handle Data Between Requests**
+| Approach | Use Case |
+|----------|----------|
+| **Extract & Pass Data** | Extract response values (IDs, tokens) & use them in subsequent requests |
+| **Global Variables** | Store values in static variables for later use |
+| **HashMap Storage** | Store multiple dynamic values during execution |
+| **TestNG `@BeforeMethod`** | Set up test data before test execution |
+| **External JSON Handling** | Read/write test data from JSON files |
+
+---
+
+This covers **everything you need** for **data handling between API requests** in **Rest Assured**! 🚀 Let me know if you want **mock interview questions** or **framework design tips**! 🎯
 
 
 
